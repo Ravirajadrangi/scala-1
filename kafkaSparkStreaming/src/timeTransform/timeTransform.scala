@@ -16,4 +16,11 @@ object timeTransform {
     val tmp:String = date.split(" ").mkString("T") + "Z"
     tmp
   }
+
+  def getHour():String={
+    val now: Date = new Date()
+    val dateFormat:SimpleDateFormat = new SimpleDateFormat("HH")
+    val hour = dateFormat.format(now)
+    hour
+  }
 }

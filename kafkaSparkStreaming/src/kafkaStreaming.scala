@@ -20,7 +20,6 @@ import org.elasticsearch.hadoop.cfg.ConfigurationOptions._
 import org.apache.log4j.{Level, LogManager}
 
 
-
 //setMaster("local[2]").
 object kafkaStreaming {
   def main(args: Array[String]) {
