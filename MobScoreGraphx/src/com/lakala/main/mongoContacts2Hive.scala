@@ -16,7 +16,11 @@ object mongoContacts2Hive {
     val conf = new SparkConf().setAppName("mongoContacts2Hive")
     val sc = new SparkContext(conf)
 
-    val rawContacts = sc.textFile("/data/auto/contactlist.txt")
+    val hiveContext = new org.apache.spark.sql.hive.HiveContext(sc)
+
+
+//    val rawContacts = sc.textFile("/data/auto/contactlist.txt")
+    val rawContacts = sc.textFile("/data/auto/contactlist1")
 
     val firstKeys:Array[String] = Array("collectTime", "loginName", "deviceId",
       "osVersion", "subChannelID", "_id", "deviceModel",
@@ -30,5 +34,11 @@ object mongoContacts2Hive {
     val secondLevelDF = Parser.parseSecondLevel(rawContacts, secondKeys)
 
 
+    val thirdKeys:Array[String] = Array("master", "contact")
+    val thirdLevelDF = Parser.parseThirdLevel(secondLevelDF, thirdKeys)
+
+    hiveContext.sql("use graphx")
+
+    thirdLevelDF.write.mode(org.apache.spark.sql.SaveMode.Append).saveAsTable("contacts_edge")
   }
 }

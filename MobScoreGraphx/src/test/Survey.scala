@@ -89,4 +89,72 @@ object Survey {
 
   val n2Neigh = sg.aggregateMessages(edgeFunc, (a:Set[VertexId], b:Set[VertexId]) => a.union(b))
 
+
+
+  //============================test==================================
+  val users1: RDD[(VertexId, String)] = {    //(isRegistered, isBlack, info)
+    sc.parallelize(Array((5L, ""),
+      (4L, ""), (3L, ""),
+      (6L, ""), (1L, ""),
+      (2L, "")))}
+
+  val relationships1: RDD[Edge[String]] =
+    sc.parallelize(Array(Edge(5L, 1L, ""),Edge(1L, 3L, ""), Edge(1L, 4L, ""),
+      Edge(3L, 2L, ""), Edge(4L, 2L, ""), Edge(2L, 6L, "")))
+
+  val defaultUser1 = ("Missing")
+
+  val graph1:Graph[String,String] = Graph(users1, relationships1, defaultUser1)
+
+
+  val neighborIds1 = graph1.collectNeighborIds(org.apache.spark.graphx.EdgeDirection.Either)
+
+  neighborIds1.collect.map{case(id, arr)=>id+"|" + arr.mkString(",")}.foreach(println(_))
+
+
+  //计算二级关系
+  val nbrSets1: VertexRDD[Set[VertexId]] = graph1.collectNeighborIds(org.apache.spark.graphx.EdgeDirection.Either).mapValues{
+    (vid, nbrs) =>
+      val set = Set[VertexId]()
+      var i = 0
+      while(i<nbrs.size){
+        if(nbrs(i) != vid){
+          set.add(nbrs(i))
+        }
+        i += 1
+      }
+      set
+  }
+
+  val sg1 = GraphImpl(nbrSets1, graph1.edges)
+
+
+  def edgeFunc1(ctx: EdgeContext[Set[VertexId], String, Set[VertexId]]): Unit = {
+    var msg2dst = ctx.srcAttr
+    msg2dst = msg2dst - ctx.dstId
+    ctx.sendToDst(msg2dst)
+
+    var msg2src = ctx.dstAttr
+    msg2src = msg2src - ctx.srcId
+    ctx.sendToSrc(msg2src)
+  }
+
+
+  val n2Neigh1 = sg1.aggregateMessages(edgeFunc1, (a:Set[VertexId], b:Set[VertexId]) => a.union(b))
+
+
+
+  case class Contacts1(vid:String, neighbors:Array[String])
+
+
+  import com.google.gson.Gson
+  val t = n2Neigh1.map{ vertex=>
+    val gson = new Gson()
+    val contacts1 = Contacts1(vertex._1.toString, vertex._2.map(i=>i.toString).toArray)
+
+    val map:Map[String, Array[String]] = Map(vertex._1.toString->vertex._2.map(i=>i.toString).toArray)
+    val jsonStr = gson.toJson(contacts1)
+    jsonStr
+  }
+
 }
