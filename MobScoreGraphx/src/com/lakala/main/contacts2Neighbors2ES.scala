@@ -20,15 +20,11 @@ object contacts2Neighbors2ES {
 
     val df = hiveContext.sql("select * from graphx.contacts_edge")
 
-//    val fg = Relationship.getFirstDegreeNeighbors(df)
-//
-//    fg.vertices.count
 
     val rdd = Relationship.getSecondDegreeNeighbors(df)
 
-    rdd.count()
 
-//    Relationship.jsonRDD2ES(rdd, "/graphx_test/contacts2Neighbors", "10.1.80.75")
+    Relationship.jsonRDD2ES(rdd, "/graphx_test/contacts2Neighbors", "10.1.80.75")
   }
 
 }

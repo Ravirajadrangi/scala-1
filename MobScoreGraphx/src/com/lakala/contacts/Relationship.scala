@@ -58,7 +58,16 @@ class Relationship{
 
     val sg1:Graph[Set[VertexId], String] = firstDegreeGraph(graph)
 
-    sg1.vertices
+    val edgeFunc1 = (ctx: EdgeContext[Set[VertexId], String, Set[VertexId]]) => {
+            var msg2dst = ctx.srcAttr
+            msg2dst = msg2dst - ctx.dstId
+            ctx.sendToDst(msg2dst)
+
+            var msg2src = ctx.dstAttr
+            msg2src = msg2src - ctx.srcId
+            ctx.sendToSrc(msg2src)
+          }
+
 
 //    def edgeFunc1(ctx: EdgeContext[Set[VertexId], String, Set[VertexId]]): Unit = {      //问题所在
 //      var msg2dst = ctx.srcAttr
@@ -70,9 +79,9 @@ class Relationship{
 //      ctx.sendToSrc(msg2src)
 //    }
 //
-//    val n2Neigh1 = sg1.aggregateMessages(edgeFunc1, (a:Set[VertexId], b:Set[VertexId]) => a.union(b))
-//
-//    n2Neigh1
+    val n2Neigh1 = sg1.aggregateMessages(edgeFunc1, (a:Set[VertexId], b:Set[VertexId]) => a.union(b))
+
+    n2Neigh1
   }
 
   def getJsonRDD(vertex:(Long, Set[VertexId])):String={
